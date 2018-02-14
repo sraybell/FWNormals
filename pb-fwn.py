@@ -1,8 +1,8 @@
 bl_info = {
-    "name": "Face Weighted Normals",
+    "name": "FWNormals",
     "description": "Weights normals based on face area, using the face vector for fine tuning.",
-    "author": "Simon Lusenc (50keda); Steven Raybell",
-    "version": (1, 3),
+    "author": "Steven Raybell (popcornbag); Original Author: Simon Lusenc (50keda)",
+    "version": (0, 2),
     "blender": (2, 79, 0),
     "location": "3D View > Quick Search > Weight Normals",
     "category": "Object",
@@ -26,11 +26,11 @@ class FaceWeightedNormals(bpy.types.Operator):
         arg1 = v1.normalized()
         arg2 = v2.normalized()
         
-        angle = 0
+        angle = None
         try:
             angle = acos(arg1.dot(arg2))
         except:
-            angle = 0 # if there's a cleaner way to "zero" out this exception block, it should be used
+            angle = 0
             
         return angle
     
@@ -52,9 +52,6 @@ class FaceWeightedNormals(bpy.types.Operator):
         vert = bm.verts[vert_index]
 
         selected_faces = []
-
-        # edge.seam = True
-        # edge.select_set(True)
 
         for f in edge.link_faces:
 
@@ -82,7 +79,7 @@ class FaceWeightedNormals(bpy.types.Operator):
 
                             more_selected += 1
 
-        # calculate areas
+        # calculate face areas
         areas = {}
         max_area = 0
         for i, f in enumerate(selected_faces):
@@ -98,7 +95,8 @@ class FaceWeightedNormals(bpy.types.Operator):
             v1 = Vector(f.verts[0].co)
             v2 = Vector(f.verts[1].co)
             v3 = Vector(f.verts[2].co)
-                        
+                       
+            # consider doing something more dynamic here to better support non-coplanr n-gons
             a1 = FaceWeightedNormals.AngleBetweenVectors((v2-v1), (v3-v1))
             a2 = FaceWeightedNormals.AngleBetweenVectors((v1-v2), (v3-v2))
             a3 = FaceWeightedNormals.AngleBetweenVectors((v1-v3), (v2-v3))
@@ -133,7 +131,7 @@ class FaceWeightedNormals(bpy.types.Operator):
         bm.verts.ensure_lookup_table()
         bm.edges.ensure_lookup_table()
 
-        # unselect everything first
+        # deselect everything first
         for v in bm.faces:
             v.select = False
             v.hide = False
