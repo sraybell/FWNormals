@@ -36,15 +36,24 @@ class FaceWeightedNormals(bpy.types.Operator):
     
     @staticmethod
     def calc_weighted_normal(bm, vert_index, edge_index):
-        """Calculates weighted normal for given combination of vertex and edge index.
+        """
+        calc_weighted_normal(bm, vert_index, edge_index)
+        
+        Calculates weighted normal for given combination of vertex and edge index.
         Need a check here to make sure that the vertex and edge are properly grouped.
 
-        :param bm: bmesh object
-        :type bm: bmesh
-        :param vert_index: index of the vertex to calculate normal for
-        :type vert_index: int
-        :param edge_index: index of the edge to use for calculation (vertex has to belong to this edge)
-        :returns: Vector
+        Parameters
+        ----------
+        bm : bmesh
+        vert_index : int 
+            index of the vertex to calculate normal for
+        edge_index : int 
+            index of the edge to use for calculation (vertex has to belong to this edge)
+        
+        Returns
+        -------
+        Vector
+            A vector that represents the calculated normal for the specified vertex and edge index
         """
         normal_hash = str(vert_index) + ":" + str(edge_index)
 
@@ -96,18 +105,20 @@ class FaceWeightedNormals(bpy.types.Operator):
             v2 = Vector(f.verts[1].co)
             v3 = Vector(f.verts[2].co)
                        
-            # consider doing something more dynamic here to better support non-coplanr n-gons
+            # consider doing something more dynamic here to better support non-coplanar n-gons
             a1 = FaceWeightedNormals.AngleBetweenVectors((v2-v1), (v3-v1))
             a2 = FaceWeightedNormals.AngleBetweenVectors((v1-v2), (v3-v2))
             a3 = FaceWeightedNormals.AngleBetweenVectors((v1-v3), (v2-v3))
             
-            faceangle.append([ a1, a2, a3 ]);
+            faceangle.append([ a1, a2, a3 ])
             
         # calculate normal
         normal = Vector()
         for i, f in enumerate(selected_faces):
             f.normal_update()
             
+            # iterate over each vertex angle and area mapped to the face, 
+            # then use a percentage of the total face area as a final adjustment.
             for r in range(0, 3):
                 normal += (f.normal * faceangle[i][r] * areas[i]) * (areas[i] / max_area)
 
